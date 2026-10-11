@@ -1,0 +1,16 @@
+{
+  "name": "kaamconnect-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KaamConnect AI local services marketplace MVP",
+  "workspaces": ["client", "server"],
+  "scripts": {
+    "dev": "concurrently -n api,web -c green,blue \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev",
+    "start": "npm --workspace server run start",
+    "build": "npm --workspace client run build",
+    "seed": "npm --workspace server run seed"
+  },
+  "devDependencies": { "concurrently": "^9.1.2" }
+}

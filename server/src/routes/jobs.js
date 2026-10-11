@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import Job from '../models/Job.js';
+import Worker from '../models/Worker.js';
+import { rankWorkers } from '../services/matching.js';
+import { requireAuth, allowRoles } from '../middleware/auth.js';
+const router=Router();
+router.post('/',requireAuth,allowRoles('customer','contractor'),async(req,res,next)=>{try{const x=z.object({title:z.string().min(3).max(120),description:z.string().min(8).max(2000),profession:z.string().min(2),skills:z.array(z.string()).default([]),budgetMin:z.coerce.number().min(0).optional(),budgetMax:z.coerce.number().min(0).optional(),city:z.string().default('Warangal'),preferredDate:z.coerce.date().optional(),preferredSlot:z.string().optional(),longitude:z.coerce.number().optional(),latitude:z.coerce.number().optional()}).parse(req.body);if(x.budgetMin&&x.budgetMax&&x.budgetMin>x.budgetMax)return res.status(400).json({success:false,error:{code:'INVALID_BUDGET',message:'Minimum budget must not exceed maximum.'}});const job=await Job.create({...x,customer:req.user.id,location:{type:'Point',coordinates:[x.longitude??79.5941,x.latitude??17.9689]}});res.status(201).json({success:true,data:{job}});}catch(e){next(e);}});
+router.get('/mine',requireAuth,async(req,res,next)=>{try{const jobs=await Job.find({customer:req.user.id}).sort({createdAt:-1});res.json({success:true,data:{jobs}});}catch(e){next(e);}});
+router.get('/:id/matches',requireAuth,allowRoles('customer','contractor'),async(req,res,next)=>{try{const job=await Job.findOne({_id:req.params.id,customer:req.user.id});if(!job)return res.status(404).json({success:false,error:{code:'NOT_FOUND',message:'Job not found.'}});const workers=await Worker.find({available:true,profession:new RegExp(job.profession,'i')}).populate('user','name');const matches=rankWorkers(job,workers);res.json({success:true,data:{matches}});}catch(e){next(e);}});
+router.get('/:id',requireAuth,async(req,res,next)=>{try{const job=await Job.findById(req.params.id).populate('customer','name');if(!job)return res.status(404).json({success:false,error:{code:'NOT_FOUND',message:'Job not found.'}});if(String(job.customer._id)!==req.user.id&&req.user.role!=='admin')return res.status(403).json({success:false,error:{code:'FORBIDDEN',message:'You cannot view this job.'}});res.json({success:true,data:{job}});}catch(e){next(e);}});
+export default router;

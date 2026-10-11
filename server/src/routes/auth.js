@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import User from '../models/User.js';
+import Worker from '../models/Worker.js';
+import { requireAuth } from '../middleware/auth.js';
+const router = Router();
+const sign = user => jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+const publicUser = user => ({ id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, preferredLanguage: user.preferredLanguage });
+router.post('/register', async (req,res,next) => { try { const input=z.object({name:z.string().trim().min(2).max(90),email:z.string().email(),password:z.string().min(8),role:z.enum(['customer','worker','contractor']).default('customer'),profession:z.string().optional(),hourlyRate:z.coerce.number().positive().optional(),city:z.string().optional()}).parse(req.body); if(await User.exists({email:input.email.toLowerCase()})) return res.status(409).json({success:false,error:{code:'EMAIL_EXISTS',message:'An account with this email already exists.'}}); const user=await User.create({name:input.name,email:input.email,passwordHash:await bcrypt.hash(input.password,12),role:input.role}); if(input.role==='worker') await Worker.create({user:user.id,profession:input.profession||'General tradesperson',hourlyRate:input.hourlyRate||300,city:input.city||'Warangal'}); res.status(201).json({success:true,data:{token:sign(user),user:publicUser(user)}}); } catch(e){next(e);} });
+router.post('/login',async(req,res,next)=>{try{const {email,password}=z.object({email:z.string().email(),password:z.string().min(1)}).parse(req.body);const user=await User.findOne({email:email.toLowerCase()}).select('+passwordHash');if(!user||!(await bcrypt.compare(password,user.passwordHash)))return res.status(401).json({success:false,error:{code:'BAD_CREDENTIALS',message:'Email or password is incorrect.'}});res.json({success:true,data:{token:sign(user),user:publicUser(user)}});}catch(e){next(e);}});
+router.get('/me',requireAuth,(req,res)=>res.json({success:true,data:{user:publicUser(req.user)}}));
+router.patch('/me',requireAuth,async(req,res,next)=>{try{const input=z.object({name:z.string().trim().min(2).max(90).optional(),phone:z.string().max(30).optional(),preferredLanguage:z.enum(['en','hi','te']).optional()}).parse(req.body);Object.assign(req.user,input);await req.user.save();res.json({success:true,data:{user:publicUser(req.user)}});}catch(e){next(e);}});
+export default router;
