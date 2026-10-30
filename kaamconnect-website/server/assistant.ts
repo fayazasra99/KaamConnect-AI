@@ -17,12 +17,18 @@ export function assistantStatus(_req: Request, res: Response) {
   });
 }
 
-export async function askAssistant(req: Request, res: Response) {
+export async function askAssistant(req: Request, res: Response): Promise<void> {
   const parsed = inputSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Enter a question up to 1,200 characters.' });
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Enter a question up to 1,200 characters.' });
+    return;
+  }
 
   const apiKey = process.env.NEBIUS_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: 'The assistant is not configured yet. Add NEBIUS_API_KEY to the server environment.' });
+  if (!apiKey) {
+    res.status(503).json({ error: 'The assistant is not configured yet. Add NEBIUS_API_KEY to the server environment.' });
+    return;
+  }
 
   const baseUrl = (process.env.NEBIUS_BASE_URL || 'https://api.tokenfactory.nebius.com/v1').replace(/\/+$/, '');
   const model = process.env.NEBIUS_MODEL || 'nvidia/Nemotron-3_5-Lightning';
@@ -41,14 +47,18 @@ export async function askAssistant(req: Request, res: Response) {
     });
     if (!response.ok) {
       console.error(`Nebius Token Factory returned HTTP ${response.status}.`);
-      return res.status(502).json({ error: 'The assistant service could not answer right now. Please try again shortly.' });
+      res.status(502).json({ error: 'The assistant service could not answer right now. Please try again shortly.' });
+      return;
     }
     const data = await response.json() as any;
     const answer = data?.choices?.[0]?.message?.content;
-    if (typeof answer !== 'string' || !answer.trim()) return res.status(502).json({ error: 'The assistant returned an empty reply. Please try again.' });
-    return res.json({ answer: answer.trim(), provider: 'Nebius Token Factory', model, usage: data.usage?.total_tokens ?? null });
+    if (typeof answer !== 'string' || !answer.trim()) {
+      res.status(502).json({ error: 'The assistant returned an empty reply. Please try again.' });
+      return;
+    }
+    res.json({ answer: answer.trim(), provider: 'Nebius Token Factory', model, usage: data.usage?.total_tokens ?? null });
   } catch (error: any) {
     console.error(error?.name === 'TimeoutError' ? 'Nebius Token Factory request timed out.' : 'Nebius Token Factory request failed.');
-    return res.status(error?.name === 'TimeoutError' ? 504 : 502).json({ error: 'The assistant service could not be reached. Please try again shortly.' });
+    res.status(error?.name === 'TimeoutError' ? 504 : 502).json({ error: 'The assistant service could not be reached. Please try again shortly.' });
   }
 }
