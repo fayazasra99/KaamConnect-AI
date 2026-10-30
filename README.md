@@ -2,6 +2,18 @@
 
 A full-stack MVP for connecting customers, skilled workers, and contractors in one local services marketplace. The VS Code workspace contains a React/Vite client and an Express/MongoDB API.
 
+## Responsive judging build
+
+The responsive worker and contractor marketplace in this submission is in [`kaamconnect-website/`](kaamconnect-website/). It includes the quick preview, React/Vite frontend, Express/MongoDB API, setup instructions, and the judging disclosure. To run this build, open that folder and follow its README.
+
+## AI and infrastructure usage disclosure
+
+This submitted website build does **not** call NVIDIA Nemotron or any other NVIDIA open model. It does **not** use Nebius Token Factory or another Nebius service; Token Factory did not accelerate this workflow. No model endpoint, API key, or Nebius infrastructure is configured. The optional assistant remains a documented future integration point. This disclosure is intentional; no AI/model usage is claimed where none occurred.
+
+## License
+
+The repository is licensed under the [MIT License](LICENSE), an OSI-approved open source license.
+
 ## Features
 
 - Customer, worker, and contractor sign-up with bcrypt password hashing and JWT authentication.

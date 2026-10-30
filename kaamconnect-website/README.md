@@ -42,6 +42,16 @@ server/seed.ts       Idempotent demo listing seed
 - The interface is English-first, with centralized labels ready for later localization.
 - The current design uses a construction photo from Unsplash and Google Fonts, so those visuals need internet access. No external service credentials are required.
 
+## Judging: AI and infrastructure disclosure
+
+This submitted build **does not call NVIDIA Nemotron or another NVIDIA open model**, and it does not use Nebius Token Factory or other Nebius services. There is no configured model endpoint or API key. The assistant/model integration described in the project brief remains a documented future integration point; no working AI assistant is claimed.
+
+Token Factory did not accelerate this implementation because it was not used. The prototype was built and packaged locally with React, Vite, Express, and MongoDB interfaces. No model training, inference, fine-tuning, or Nebius infrastructure usage is represented here. This disclosure is intentional so judges can distinguish implemented features from planned integrations.
+
+## License
+
+The project is released under the repository's [MIT License](../LICENSE), an OSI-approved open source license.
+
 ## Production notes
 
 Set `CLIENT_URL` to the deployed frontend origin, `MONGODB_URI` to a secured database, and `JWT_SECRET` to a strong secret. Set `VITE_API_URL` to the deployed API URL before building the frontend (`https://your-api.example/api`). Deploy the static `dist/` output to a static host and run `npm run server` on a Node host. Enforce HTTPS and configure database network access and backups at the hosting provider. Review API rate limits, logging, monitoring, and privacy requirements before launch.
