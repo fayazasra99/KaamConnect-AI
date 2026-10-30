@@ -15,8 +15,9 @@ A responsive job marketplace prototype for daily wage workers and contractors in
 4. In one terminal run `npm run server` (API at http://localhost:4000).
 5. In another terminal run `npm run dev` (website at http://localhost:5173).
 6. Optional: run `npm run seed` to add clearly marked example job listings to MongoDB.
+7. To enable the Nemotron guide, set `NEBIUS_API_KEY` in the backend `.env`. Defaults select `nvidia/Nemotron-3_5-Lightning` through `https://api.tokenfactory.nebius.com/v1`; use a model ID enabled for your Token Factory account.
 
-The frontend can also run without the API: it displays labeled local demo listings, supports search/filter and an in-browser demo sign-in, application feedback, and demo job posting. Demo authentication is not secure and is only for preview. With the API, register accounts to use hashed-password authentication, JWT authorization, Mongo-backed job listings, applications, and contractor review that creates bookings.
+The frontend can also run without the API: it displays labeled local demo listings, supports search/filter and an in-browser demo sign-in, application feedback, and demo job posting. Demo authentication is not secure and is only for preview. With the API, register accounts to use hashed-password authentication, JWT authorization, Mongo-backed job listings, applications, and contractor review that creates bookings. The optional assistant uses NVIDIA Nemotron through Nebius Token Factory when configured.
 
 ## Main workflows
 
@@ -37,16 +38,18 @@ server/seed.ts       Idempotent demo listing seed
 ## Limitations
 
 - Demo-mode applications are kept in this browser only. API-backed job posting, application and booking actions need MongoDB and a signed-in API account.
-- OAuth, email/SMS notifications, real payment processing, GPS tracking, and a live AI assistant are not configured. No payment details or location data are collected.
-- The assistant integration is intentionally omitted from this initial core workflow; no AI provider is claimed or called.
+- OAuth, email/SMS notifications, real payment processing, and GPS tracking are not configured. No payment details or location data are collected.
+- The Nemotron guide remains inactive until a valid Token Factory API key with access to the selected model is configured. Live inference was not tested here because no API key was provided.
 - The interface is English-first, with centralized labels ready for later localization.
-- The current design uses a construction photo from Unsplash and Google Fonts, so those visuals need internet access. No external service credentials are required.
+- The current design uses a construction photo from Unsplash and Google Fonts, so those visuals need internet access. Live Nemotron replies require a Nebius Token Factory API key.
 
 ## Judging: AI and infrastructure disclosure
 
-This submitted build **does not call NVIDIA Nemotron or another NVIDIA open model**, and it does not use Nebius Token Factory or other Nebius services. There is no configured model endpoint or API key. The assistant/model integration described in the project brief remains a documented future integration point; no working AI assistant is claimed.
+The in-app assistant is implemented to answer basic KaamConnect and job-search questions with **NVIDIA Nemotron 3.5 Lightning** (`nvidia/Nemotron-3_5-Lightning`) through Nebius Token Factory’s OpenAI-compatible Chat Completions API. The browser calls only the KaamConnect backend; the backend keeps `NEBIUS_API_KEY` server-side, sends up to eight prior conversation messages, caps replies at 350 tokens, and rate-limits assistant requests. The assistant has no job-database access and cannot apply to jobs, make payments, verify workers, or track location.
 
-Token Factory did not accelerate this implementation because it was not used. The prototype was built and packaged locally with React, Vite, Express, and MongoDB interfaces. No model training, inference, fine-tuning, or Nebius infrastructure usage is represented here. This disclosure is intentional so judges can distinguish implemented features from planned integrations.
+**Credential and usage status:** no Token Factory API key was supplied in this workspace, so the endpoint could not be called or live-tested here. Set the key as described above; the UI reports when the assistant is not configured. This project uses Token Factory at runtime after configuration, but Token Factory did **not** accelerate the coding workflow for this submission. No other Nebius infrastructure or services were used. No model training or fine-tuning is included.
+
+Official references: [Nebius Token Factory Nemotron inference](https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference) and [Token Factory API overview](https://dev.nebius.com/token-factory).
 
 ## License
 
